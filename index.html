@@ -1,0 +1,187 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/r-chart.js"></script>
+    <style>
+        .chart {
+            width: 300px;
+            height: 200px;
+            border: 1px solid;
+            position: relative;
+            float:left;
+        }
+
+        .x-label span {
+            transform: rotate(45deg);
+        }
+
+        .y-gridline {
+            stroke: rgba(100,100,100,0.5);
+            stroke-width: 0.3;
+        }
+
+        .r-chart .x-label, .r-chart .y-label {
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="chart1" class="chart"></div>
+    <div id="chart2" class="chart"></div>
+    <div id="chart3" class="chart"></div>
+    <div id="chart4" class="chart"></div>
+    <div id="chart5" class="chart"></div>
+    <div id="chart6" class="chart"></div>
+    <script>
+        var data1 = [
+            {
+                type: "bar",
+                stream: [{ x: "Jan", y: 10 }, { x: "Mar", y: 20 }, { x: "Jul", y: 40 }, { x: "Aug", y: 45 }, ],
+            },
+            {
+                style: { color: "red" }, type: "bar",
+                stream: [{ x: "Mar", y: 25 }, { x: "May", y: 40 }, { x: "Jun", y: 60 }, { x: "Dec", y: 75 }, ]
+            }
+        ];
+        var data2 = [
+                {
+                    style: { color: "red" }, type: "bar",
+                    stream: [{ x: 0, y: 30 }, { x: 10, y: 20 }, { x: 20, y: 40 }, { x: 30, y: 50 }, ],
+                },
+                {
+                    style: { color: "orange" }, type: "bar",
+                    stream: [{ x: 0, y: 25 }, { x: 10, y: 30 }, { x: 20, y: 60 }, { x: 30, y: 75 }, ],
+                },
+                {
+                    style: { color: "yellow" }, type: "bar",
+                    stream: [{ x: 0, y: 25 }, { x: 10, y: 50 }, { x: 20, y: 60 }, { x: 30, y: 75 }, ],
+                },
+                {
+                    style: { color: "green" }, type: "bar",
+                    stream: [{ x: 0, y: 25 }, { x: 10, y: 40 }, { x: 20, y: 60 }, { x: 30, y: 75 }, ],
+                },
+                {
+                    style: { color: "blue" }, type: "bar",
+                    stream: [{ x: 0, y: 25 }, { x: 10, y: 10 }, { x: 20, y: 60 }, { x: 30, y: 75 }, ],
+                },
+        ];
+        var data3 = [
+            {
+                type: "line",
+                stream: [{ x: "Jan", y: 10 }, { x: "Mar", y: 20 }, { x: "Jul", y: 40 }, { x: "Aug", y: 45 }, ],
+            },
+            {
+                style: { color: "red" }, type: "line",
+                stream: [{ x: "Mar", y: 25 }, { x: "May", y: 40 }, { x: "Jun", y: 60 }, { x: "Dec", y: 75 }, ]
+            }
+        ];
+        var data4 = [
+                {
+                    type: "line",
+                    stream: [{ x: 0, y: 0 }, { x: 10, y: 20 }, { x: 20, y: 40 }, { x: 30, y: 50 }, ],
+                },
+                {
+                    style: { color: "red" }, type: "line", id: "data2", title: "data2",
+                    stream: [{ x: 10, y: 25 }, { x: 20, y: 40 }, { x: 30, y: 60 }, { x: 40, y: 75 }, ],
+                }
+        ];
+        var data5 = [
+                {
+                    type: "line",
+                    stream: [{ x: 0, y: 0 }, { x: 10, y: 20 }, { x: 20, y: 40 }, { x: 30, y: 50 }, ],
+                },
+                {
+                    style: { color: "red" }, type: "bar",
+                    stream: [{ x: 10, y: 25 }, { x: 20, y: 40 }, { x: 30, y: 60 }, { x: 40, y: 75 }, ],
+                }
+        ];
+        var data6 = [
+            {
+                type: "bar",
+                stream: [{ y: "Jan", x: 10 }, { y: "Mar", x: 20 }, { y: "Jul", x: 40 }, { y: "Aug", x: 45 }, ],
+            },
+            {
+                style: { color: "red" }, type: "bar",
+                stream: [{ y: "Mar", x: 25 }, { y: "May", x: 40 }, { y: "Jun", x: 60 }, { y: "Dec", x: 75 }, ]
+            }
+        ];
+
+        var A = new RChart({
+            container: "#chart1",
+            x: {
+                labels: [ "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec", ],
+                size: 30,
+            },
+            y: {
+                labels:{start: 0,step: 10,end: 80},
+                size: 30,
+            },
+            data: data1
+        });
+        var B = new RChart({
+            container: "#chart2",
+            x: {
+                labels: { start: 0, step: 10, end: 30 },
+                size: 30,
+            },
+            y: {
+                labels: { start: 0, step: 10, end: 80 },
+                size: 30,
+            },
+            data: data2
+        });
+        var C = new RChart({
+            container: "#chart3",
+            x: {
+                labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", ],
+                size: 30,
+            },
+            y: {
+                labels: { start: 0, step: 10, end: 80 },
+                size: 30,
+            },
+            data: data3
+        });
+        var D = new RChart({
+            container: "#chart4",
+            x: {
+                labels: { start: 0, step: 10, end: 30 },
+                size: 30,
+            },
+            y: {
+                labels: { start: 0, step: 10, end: 80 },
+                size: 30,
+            },
+            data: data4
+        });
+        var E = new RChart({
+            container: "#chart5",
+            x: {
+                labels: { start: 0, step: 10, end: 30 },
+                size: 30,
+            },
+            y: {
+                labels: { start: 0, step: 10, end: 80 },
+                size: 30,
+            },
+            data: data5
+        });
+        var F = new RChart({
+            container: "#chart6",
+            x: {
+                labels: { start: 0, step: 10, end: 80 },
+                size: 30,
+            },
+            y: {
+                labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", ],
+                size: 30,
+            },
+            data: data6
+        });
+    </script>
+</body>
+</html>
