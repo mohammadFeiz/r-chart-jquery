@@ -21,7 +21,7 @@
 
         .y-gridline {
             stroke: rgba(100,100,100,0.5);
-            stroke-width: 0.3;
+            stroke-width: 0.2;
         }
 
         .r-chart .x-label, .r-chart .y-label {
@@ -43,29 +43,29 @@
                 stream: [{ x: "Jan", y: 10 }, { x: "Mar", y: 20 }, { x: "Jul", y: 40 }, { x: "Aug", y: 45 }, ],
             },
             {
-                style: { color: "red" }, type: "bar",
+                color: "red" , type: "bar",
                 stream: [{ x: "Mar", y: 25 }, { x: "May", y: 40 }, { x: "Jun", y: 60 }, { x: "Dec", y: 75 }, ]
             }
         ];
         var data2 = [
                 {
-                    style: { color: "red" }, type: "bar",
+                    color: "red", type: "bar",
                     stream: [{ x: 0, y: 30 }, { x: 10, y: 20 }, { x: 20, y: 40 }, { x: 30, y: 50 }, ],
                 },
                 {
-                    style: { color: "orange" }, type: "bar",
+                    color: "orange", type: "bar",
                     stream: [{ x: 0, y: 25 }, { x: 10, y: 30 }, { x: 20, y: 60 }, { x: 30, y: 75 }, ],
                 },
                 {
-                    style: { color: "yellow" }, type: "bar",
+                    color: "yellow" , type: "bar",
                     stream: [{ x: 0, y: 25 }, { x: 10, y: 50 }, { x: 20, y: 60 }, { x: 30, y: 75 }, ],
                 },
                 {
-                    style: { color: "green" }, type: "bar",
+                    color: "green" , type: "bar",
                     stream: [{ x: 0, y: 25 }, { x: 10, y: 40 }, { x: 20, y: 60 }, { x: 30, y: 75 }, ],
                 },
                 {
-                    style: { color: "blue" }, type: "bar",
+                    color: "blue" , type: "bar",
                     stream: [{ x: 0, y: 25 }, { x: 10, y: 10 }, { x: 20, y: 60 }, { x: 30, y: 75 }, ],
                 },
         ];
@@ -75,7 +75,7 @@
                 stream: [{ x: "Jan", y: 10 }, { x: "Mar", y: 20 }, { x: "Jul", y: 40 }, { x: "Aug", y: 45 }, ],
             },
             {
-                style: { color: "red" }, type: "line",
+                color: "red" , type: "line",
                 stream: [{ x: "Mar", y: 25 }, { x: "May", y: 40 }, { x: "Jun", y: 60 }, { x: "Dec", y: 75 }, ]
             }
         ];
@@ -85,7 +85,7 @@
                     stream: [{ x: 0, y: 0 }, { x: 10, y: 20 }, { x: 20, y: 40 }, { x: 30, y: 50 }, ],
                 },
                 {
-                    style: { color: "red" }, type: "line", id: "data2", title: "data2",
+                    color: "red" , type: "line", id: "data2", title: "data2",
                     stream: [{ x: 10, y: 25 }, { x: 20, y: 40 }, { x: 30, y: 60 }, { x: 40, y: 75 }, ],
                 }
         ];
@@ -95,7 +95,7 @@
                     stream: [{ x: 0, y: 0 }, { x: 10, y: 20 }, { x: 20, y: 40 }, { x: 30, y: 50 }, ],
                 },
                 {
-                    style: { color: "red" }, type: "bar",
+                    color: "red" , type: "bar",
                     stream: [{ x: 10, y: 25 }, { x: 20, y: 40 }, { x: 30, y: 60 }, { x: 40, y: 75 }, ],
                 }
         ];
@@ -105,7 +105,7 @@
                 stream: [{ y: "Jan", x: 10 }, { y: "Mar", x: 20 }, { y: "Jul", x: 40 }, { y: "Aug", x: 45 }, ],
             },
             {
-                style: { color: "red" }, type: "bar",
+                color: "red" , type: "bar",
                 stream: [{ y: "Mar", x: 25 }, { y: "May", x: 40 }, { y: "Jun", x: 60 }, { y: "Dec", x: 75 }, ]
             }
         ];
@@ -123,6 +123,7 @@
             data: data1
         });
         var B = new RChart({
+            changable:true,
             container: "#chart2",
             x: {
                 labels: { start: 0, step: 10, end: 30 },
@@ -135,6 +136,7 @@
             data: data2
         });
         var C = new RChart({
+            changable: true,
             container: "#chart3",
             x: {
                 labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", ],

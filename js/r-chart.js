@@ -1,97 +1,68 @@
 ﻿function RChart(config) {
     var a = {
-        state: {
-            
-        },
+        state: { showPoint: true, showLine: true, showXGrid: false, showYGrid: true, showArea: true, changable: false },
         selected: [],
         selectRectangle: { x1: null, y1: null, x2: null, y2: null, template: null, element: null, active: false },
-        init: function (obj) {
-            obj = this.updateConfig(obj);
-            this.updateState(obj);
+        update: function (obj) {
+            for (var prop in obj) { this.state[prop] = obj[prop]; }
+            this.updateContainer();
+            this.updateData();
+            this.updateAxis("x"); this.updateAxis("y");
             this.updatePosition();
             this.render();
-            this.eventHandler("window","keydown", this.keyDown);
+            this.eventHandler("window", "keydown", this.keyDown);
             this.eventHandler("window", "keyup", this.keyUp);
         },
-        updateConfig(obj) {
-            obj.data = obj.data || this.state.data; if (!obj.data) { alert("missing data!!!");}
-            obj.x.labels = obj.x.labels || this.state.xlabels; obj.y.labels = obj.y.labels || this.state.ylabels;
-            obj = this.setConfigByData(obj);
-            obj = this.setConfigByLabels(obj, "x"); obj = this.setConfigByLabels(obj, "y");
-            return obj;
+        updateContainer: function () {
+            var container = $(this.state.container);
+            if (!container || container.length === 0) { alert("container error !!!"); }
         },
-        updateState: function (obj) {
-            var xsize = this.state.xsize = obj.x.size, ysize = this.state.ysize = obj.y.size;
-            var container = this.state.container = $(obj.container);
-            var xsvg = this.state.xsvg = container.width() - ysize,ysvg = this.state.ysvg = container.height() - xsize;
-            var xtype = this.state.xtype = obj.x.type,ytype = this.state.ytype = obj.y.type;
-            if (xtype === "number") {
-                var xstart = this.state.xstart = obj.x.labels.start; 
-                var xstep = this.state.xstep = obj.x.labels.step;
-                var xend = this.state.xend = obj.x.labels.end;
-                var xstartvalue = this.state.xstartvalue = xstart - (xstep / 2);
-                var xendvalue = this.state.xendvalue = xend + (xstep / 2);
-                var xratio = this.state.xratio = xsvg / (xendvalue - xstartvalue);
-            }
-            if (ytype === "number") {
-                var ystart = this.state.ystart = obj.y.labels.start;
-                var ystep = this.state.ystep = obj.y.labels.step;
-                var yend = this.state.yend = obj.y.labels.end;
-                var ystartvalue = this.state.ystartvalue = ystart;
-                var yendvalue = this.state.yendvalue = yend + ystep;
-                var yratio = this.state.yratio = ysvg / (yendvalue - ystartvalue);
-            }
-            var xlist = this.state.xlist = obj.x.list, ylist = this.state.ylist = obj.y.list;
-            var xlength = this.state.xlength = xlist.length, ylength = this.state.ylength = ylist.length;
-            var xunit = this.state.xunit = xsvg / xlength, yunit = this.state.yunit = ysvg / ylength;
-            var data = this.state.data = obj.data;
-            var type = this.state.type = obj.type;
-            var rotated = this.state.rotated = obj.rotated;
-            var barCount = this.state.barCount = obj.barCount;
-        },
-        setConfigByData: function (obj) {
-            var first = obj.data[0].stream[0];
-            obj.x.type = typeof first.x; obj.y.type = typeof first.y;//type
-            obj.x.min = first.x; obj.y.min = first.y;
-            obj.x.max = first.x; obj.y.max = first.y;
-            var datas = obj.data;
-            obj.barCount = 0;
+        updateData: function () {
+            var s = this.state;
+            var first = s.data[0].stream[0];
+            s.xtype = typeof first.x; s.ytype = typeof first.y;
+            s.xmin = first.x; s.ymin = first.y;
+            s.xmax = first.x; s.ymax = first.y;
+            s.barCount = 0;
             var types = [];
-            for (var i = 0; i < datas.length; i++) {
-                var data = datas[i];
-                data.type = data.type || "line";
-                data.style = data.style || {};
-                data.style.color = data.style.color || "#000";
-                data.style.pointWidth = data.style.pointWidth || 6;
-                data.style.lineWidth = data.style.lineWidth || 1;
+            for (var i = 0; i < s.data.length; i++) {
+                var data = s.data[i];
+                data.type = data.type || "line"; data.color = data.color || "#000"; data.pointSize = data.pointSize || 6; data.lineSize = data.lineSize || 1;
                 if (types.indexOf(data.type) === -1) { types.push(data.type); }
-                if (data.type === "bar") { obj.barCount++; }
+                if (data.type === "bar") { s.barCount++; }
                 var length = data.stream.length;
                 for (var j = 0; j < length; j++) {
                     var stream = data.stream[j];
-                    if (obj.x.type !== typeof stream.x) { alert("error:multiple type in x of streams:data[" + i + "].stream[" + j + "].x"); }
-                    if (obj.y.type !== typeof stream.y) { alert("error:multiple type in y of streams:data[" + i + "].stream[" + j + "].y"); }
-                    if (obj.x.type === "number") { obj.x.min = Math.min(obj.x.min, stream.x); obj.x.max = Math.max(obj.x.max, stream.x); }
-                    if (obj.y.type === "number") { obj.y.min = Math.min(obj.y.min, stream.y); obj.y.max = Math.max(obj.y.max, stream.y); }
+                    if (s.xtype !== typeof stream.x) { alert("error:multiple type in x of streams:data[" + i + "].stream[" + j + "].x"); }
+                    if (s.ytype !== typeof stream.y) { alert("error:multiple type in y of streams:data[" + i + "].stream[" + j + "].y"); }
+                    if (s.xtype === "number") { s.xmin = Math.min(s.xmin, stream.x); s.xmax = Math.max(s.xmax, stream.x); }
+                    if (s.ytype === "number") { s.ymin = Math.min(s.ymin, stream.y); s.ymax = Math.max(s.ymax, stream.y); }
                 }
             }
-            if (types.length === 1) { obj.type = types[0] } else { obj.type = "combo"; }
-            obj.rotated = (obj.x.type === "number" && obj.y.type === "string");
-            return obj;
+            s.type = types.length === 1 ? types[0] : "combo";
+            s.rotated = s.xtype === "number" && s.ytype === "string";
         },
-        setConfigByLabels: function (obj, axis) {
-            var label = obj[axis].labels = obj[axis].labels || {};
-            if (obj[axis].type === "string") {
-                if (!Array.isArray(label) || label.length === 0) { alert("error:labels." + axis + " must be an array with greater length than 0!!!"); return false; }
-            }
+        updateAxis: function (axis) {
+            var s = this.state, container = $(s.container);
+            s[axis] = s[axis] || {};
+            s.x.size = s.x.size || 36; s.y.size = s.y.size || 36;
+            s[axis].labels = s[axis].labels || {};
+            s.xsize = s.x.size; s.ysize = s.y.size;
+            s.xsvg = $(s.container).width() - s.ysize; s.ysvg = $(s.container).height() - s.xsize;
+            if (s[axis + 'type'] === "string") { if (!Array.isArray(s[axis].labels) || s[axis].labels.length === 0) { alert("error:" + axis + ".labels must be an array with greater length than 0!!!"); return false; } }
             else {
-                if (typeof label !== "object" || Array.isArray(label)) { alert("error:label." + axis + " must be an object!!!"); return false; }
-                obj[axis].labels.start = label.start === undefined ? obj[axis].min : label.start;
-                obj[axis].labels.end = label.end === undefined ? obj[axis].max : label.end;
-                obj[axis].labels.step = label.step || Math.ceil((label.end - label.start) / 10);
+                if (typeof s[axis].labels !== "object" || Array.isArray(s[axis].labels)) { alert("error:x.labels must be an object!!!"); return false; }
+                s[axis + 'start'] = s[axis].labels.start = s[axis].labels.start === undefined ? s[axis + 'min'] : s[axis].labels.start;
+                s[axis + 'end'] = s[axis].labels.end = s[axis].labels.end === undefined ? s[axis + 'max'] : s[axis].labels.end;
+                s[axis + 'step'] = s[axis].labels.step = s[axis].labels.step || Math.ceil((s[axis].labels.end - s[axis].labels.start) / 10);
+                s[axis + 'startvalue'] = s[axis + 'start'] - (s[axis + 'step'] / 2);
+                s[axis + 'endvalue'] = s[axis + 'end'] + (s[axis + 'step'] / 2);
+                s[axis + 'ratio'] = s[axis + 'svg'] / (s[axis + 'endvalue'] - s[axis + 'startvalue']);
             }
-            obj[axis].list = getLabelList(obj[axis].labels, axis);
-            return obj;
+            s[axis + 'labels'] = s[axis].labels;
+            s[axis + 'list'] = getLabelList(s[axis].labels, axis);
+            s[axis + 'length'] = s[axis + 'list'].length;
+            s[axis + 'unit'] = s[axis + 'svg'] / s[axis + 'length'];
         },
         getStyle: function () {
             var str = '';
@@ -106,14 +77,18 @@
             str += RSVG(s);
             str += '</div>';
             $(this.state.container).html(str);
-            this.eventHandler(".r-c-point,.r-c-bar", "mousedown", this.pointMouseDown);
-            this.eventHandler(".r-c-background", "mousedown", this.backgroundMouseDown);
+            if (s.changable === true) {
+                this.eventHandler(".r-c-point,.r-c-bar", "mousedown", this.pointMouseDown);
+                this.eventHandler(".r-c-background", "mousedown", this.backgroundMouseDown);
+            }
+            this.eventHandler(".r-c-point", "mouseover", this.pointMouseOver);
+            this.eventHandler(".r-c-point", "mouseleave", this.pointMouseOut);
+
         },
         updatePosition: function () {
             var datas = this.state.data, dataLength = datas.length;
             for (var i = 0; i < dataLength; i++) {
                 var data = datas[i], streams = data.stream, streamLength = streams.length;
-                var style = data.style;
                 for (var j = 0; j < streamLength; j++) {
                     var stream = streams[j];
                     stream.position = {
@@ -131,7 +106,7 @@
                 var position = index * s.xunit;
                 position += s.xunit / 2;
             }
-            else {var position = (value - s.xstartvalue) * s.xratio;}
+            else { var position = (value - s.xstartvalue) * s.xratio; }
             return position;
         },
         getYPosition: function (value) {
@@ -153,40 +128,40 @@
             var data = s.data[dataIndex];
             var stream = data.stream[streamIndex];
             var value = stream.position[axis];
+            var container = $(s.container);
             if (data.type === "line") {
-                var point = s.container.find(".r-c-point[data-data-index=" + dataIndex + "][data-stream-index=" + streamIndex + "]");
+                var point = container.find(".r-c-point[data-data-index=" + dataIndex + "][data-stream-index=" + streamIndex + "]");
                 point.attr("c" + axis, value);
-                var beforeLine = s.container.find(".r-c-line[data-data-index=" + dataIndex + "][data-end-stream-index=" + streamIndex + "]");
-                var afterLine = s.container.find(".r-c-line[data-data-index=" + dataIndex + "][data-start-stream-index=" + streamIndex + "]");
+                var beforeLine = container.find(".r-c-line[data-data-index=" + dataIndex + "][data-end-stream-index=" + streamIndex + "]");
+                var afterLine = container.find(".r-c-line[data-data-index=" + dataIndex + "][data-start-stream-index=" + streamIndex + "]");
                 beforeLine.attr(axis + "2", value);
                 afterLine.attr(axis + "1", value);
-                var path = s.container.find(".r-c-path[data-data-index=" + dataIndex + "]");
-                path.attr("d", getD(stream,s));
+                var path = container.find(".r-c-path[data-data-index=" + dataIndex + "]");
+                path.attr("d", getD(data.stream, s));
             }
             else if (data.type === "bar") {
-                var bar = s.container.find(".r-c-bar[data-data-index=" + dataIndex + "][data-stream-index=" + streamIndex + "]");
+                var bar = container.find(".r-c-bar[data-data-index=" + dataIndex + "][data-stream-index=" + streamIndex + "]");
                 if (axis === "x") {
-                    bar.attr("width", value - s.xunit/2);
+                    bar.attr("width", value - s.xunit / 2);
                 }
                 else {
                     bar.attr(axis, value);
                     bar.attr("height", s.ysvg - value);
                 }
-
             }
         },
         moveTo: function (dataIndex, streamIndex, value) {
             var s = this.state;
             var stream = s.data[dataIndex].stream[streamIndex];
             if (value.x !== undefined) {
-                if (value.x > s.xend) { value.x = s.xend;}
+                if (value.x > s.xend) { value.x = s.xend; }
                 if (value.x < s.xstart) { value.x = s.xstart; }
                 stream.x = value.x;
                 stream.position.x = this.getXPosition(value.x);
                 this.updateElement(dataIndex, streamIndex, "x");
             }
             if (value.y !== undefined) {
-                if (value.y > s.yend) {value.y = s.yend;}
+                if (value.y > s.yend) { value.y = s.yend; }
                 if (value.y < s.ystart) { value.y = s.ystart; }
                 stream.y = value.y;
                 stream.position.y = this.getYPosition(value.y);
@@ -198,11 +173,11 @@
             if (this.isSelected(obj)) { return; }
             var data = s.data[obj.dataIndex];
             var stream = data.stream[obj.streamIndex];
-            var element = s.container.find("[data-data-index=" + obj.dataIndex + "][data-stream-index=" + obj.streamIndex + "]");
+            var element = $(s.container).find("[data-data-index=" + obj.dataIndex + "][data-stream-index=" + obj.streamIndex + "]");
             var tagName = element.prop("tagName");
             this.selected.push({ dataIndex: obj.dataIndex, streamIndex: obj.streamIndex, position: stream.position });
             //pointerChart.addDetail(element);
-            if (tagName === "circle") { element.attr("fill", data.style.color); }
+            if (tagName === "circle") { element.attr("fill", data.color); }
             else if (tagName === "rect") {
                 element.attr("fill", "#aaa");
             }
@@ -222,11 +197,11 @@
             return false;
         },
         deselect: function (obj) {
-            var s = this.state,index = this.getIndex(obj),data = s.data[index.dataIndex], stream = data.stream[index.streamIndex];
-            var element = s.container.find("[data-data-index=" + index.dataIndex + "][data-stream-index=" + index.streamIndex + "]");
+            var s = this.state, index = this.getIndex(obj), data = s.data[index.dataIndex], stream = data.stream[index.streamIndex];
+            var element = $(s.container).find("[data-data-index=" + index.dataIndex + "][data-stream-index=" + index.streamIndex + "]");
             var tagName = element.prop("tagName");
             if (tagName === "circle") { element.attr("fill", "#fff"); }
-            if (tagName === "rect") { element.attr("fill", data.style.color); }
+            if (tagName === "rect") { element.attr("fill", data.color); }
             //$(".stream-detail[data-data-index=" + index.data + "][data-stream-index=" + index.stream + "]").remove();
             var length = this.selected.length;
             for (var i = 0; i < length; i++) {
@@ -244,11 +219,12 @@
             }
         },
         selectBySelectRectangle: function () {
-            var s = this.state,sr = this.selectRectangle;
+            var s = this.state, sr = this.selectRectangle;
             if (!sr.active) { return; }
+            var container = $(s.container);
             var startX = Math.min(sr.x1, sr.x2), endX = Math.max(sr.x1, sr.x2);
             var startY = Math.min(sr.y1, sr.y2), endY = Math.max(sr.y1, sr.y2);
-            var points = s.container.find(".r-c-point");
+            var points = container.find(".r-c-point");
             var length = points.length;
             for (var i = 0; i < length; i++) {
                 var point = points.eq(i);
@@ -258,7 +234,7 @@
                     this.select({ dataIndex: point.data("data-index"), streamIndex: point.data("stream-index") });
                 }
             }
-            var bars = s.container.find(".r-c-bar");
+            var bars = container.find(".r-c-bar");
             var length = bars.length;
             for (var i = 0; i < length; i++) {
                 var bar = bars.eq(i);
@@ -271,21 +247,36 @@
                 if (y > endY) { continue; }
                 this.select({ dataIndex: bar.data("data-index"), streamIndex: bar.data("stream-index") });
             }
-            s.element.attr({ "x": 0, "y": 0, "width": 0, "height": 0 });
+            sr.element.attr({ "x": 0, "y": 0, "width": 0, "height": 0 });
             s.active = false;
         },
         getCoords: function (e) {
-            var offset = this.state.container.find("svg").offset();
+            var offset = $(this.state.container).find("svg").offset();
             return { x: e.clientX - offset.left + pageXOffset, y: e.clientY - offset.top + pageYOffset };
+        },
+        pointMouseOver: function (e) {
+            var point = $(e.currentTarget);
+            var dataIndex = point.attr("data-data-index");
+            var streamIndex = point.attr("data-stream-index");
+            var data = this.state.data[dataIndex];
+            var stream = data.stream[streamIndex];
+            var position = stream.position;
+            var offset = data.pointSize / 2;
+            var str = '<div style="height:10px;width:40px;font-size:10px;text-align:center;position:absolute;left:' + (parseInt(point.attr("cx")) + this.state.ysize - 20) + 'px;top:' + (parseInt(point.attr("cy")) - offset - 14) + 'px;" class="r-chart-detail">' + (stream.x + ',' + stream.y) + '</div>';
+            $(this.state.container).append(str);
+            
+        },
+        pointMouseOut: function () {
+            $(this.state.container).find(".r-chart-detail").remove();
         },
         pointMouseDown: function (e) {
             var s = this.state;
             if (s.ytype === "number") { var axis = "y"; } else if (s.xtype === "number") { var axis = "x"; } else { return; }
             var element = $(e.target);
             var index = this.getIndex(element);
-            if (!this.multiSelect) {if (!this.isSelected(element)) {this.deselectAll();}}
+            if (!this.multiSelect) { if (!this.isSelected(element)) { this.deselectAll(); } }
             this.select(index);
-            this.eventHandler("window","mousemove", this.pointMouseMove);
+            this.eventHandler("window", "mousemove", this.pointMouseMove);
             this.eventHandler("window", "mouseup", this.pointMouseUp);
             var coords = this.getCoords(e);
             var values = [];
@@ -297,7 +288,7 @@
             this.startOffset = { coord: coords[axis], axis: axis, run: false, values: values };
         },
         pointMouseMove: function (e) {
-            var s = this.state,so = this.startOffset,axis = so.axis,ratio = s[axis+"ratio"];
+            var s = this.state, so = this.startOffset, axis = so.axis, ratio = s[axis + "ratio"];
             var coords = this.getCoords(e);
             var offset = coords[axis] - so.coord;
             offset /= ratio;
@@ -315,14 +306,14 @@
             this.change = change;
         },
         pointMouseUp: function () {
-            this.eventRemover("window","mousemove",this.pointMouseMove);
+            this.eventRemover("window", "mousemove", this.pointMouseMove);
             this.eventRemover("window", "mouseup", this.pointMouseUp);
-            if (this.onchange && this.change ) {this.onchange(this.change);}
+            if (this.onchange && this.change) { this.onchange(this.change); }
             this.change = null;
         },
         keyDown: function (e) {
             e = e.which || e.keyCode;
-            if (e === 17) { this.multiSelect = true;}
+            if (e === 17) { this.multiSelect = true; }
         },
         keyUp: function (e) {
             e = e.which || e.keyCode;
@@ -331,13 +322,13 @@
             }
         },
         backgroundMouseDown: function (e) {
-            this.eventHandler("window","mousemove", this.backgroundMouseMove);
+            this.eventHandler("window", "mousemove", this.backgroundMouseMove);
             this.eventHandler("window", "mouseup", this.backgroundMouseUp);
             if (!this.multiSelect) {
                 this.deselectAll();
             }
             var coords = this.getCoords(e);
-            this.selectRectangle = { x1: coords.x, y1: coords.y, element: this.state.container.find(".select-rectangle") };
+            this.selectRectangle = { x1: coords.x, y1: coords.y, element: $(this.state.container).find(".select-rectangle") };
         },
         backgroundMouseMove: function (e) {
             var coords = this.getCoords(e);
@@ -353,15 +344,15 @@
             this.selectBySelectRectangle();
         },
         eventHandler: function (selector, ev, func) {
-            if (selector === "window") {$(window).unbind(ev, $.proxy(func, this)).bind(ev, $.proxy(func, this));}
-            else {this.state.container.find(selector).unbind(ev, $.proxy(func, this)).bind(ev, $.proxy(func, this));}
+            if (selector === "window") { $(window).unbind(ev, $.proxy(func, this)).bind(ev, $.proxy(func, this)); }
+            else { $(this.state.container).find(selector).unbind(ev, $.proxy(func, this)).bind(ev, $.proxy(func, this)); }
         },
         eventRemover: function (selector, ev, func) {
-            if (selector === "window") {$(window).unbind(ev, $.proxy(func, this));}
-            else {this.state.container.find(selector).unbind(ev, $.proxy(func, this));}
+            if (selector === "window") { $(window).unbind(ev, $.proxy(func, this)); }
+            else { $(this.state.container).find(selector).unbind(ev, $.proxy(func, this)); }
         },
     };
-    a.init(config);
+    a.update(config);
     return a;
 }
 
@@ -524,7 +515,6 @@ function RBars(props) {
     for (var i = 0; i < datas.length; i++) {
         var data = datas[i];
         if (data.type !== "bar") { continue; }
-        var style = data.style;
         var stream = data.stream;
         for (var j = 0; j < stream.length; j++) {
             var point = stream[j];
@@ -534,7 +524,7 @@ function RBars(props) {
                 streamIndex: j,
                 x: point.position.x,
                 y: point.position.y,
-                color: style.color,
+                color: data.color,
                 barCounter: barCounter,
                 state: props,
             });
@@ -564,7 +554,7 @@ function RBar(props) {
         str += 'y="' + (props.y - barWidth / 2 + (props.barCounter * barWidth / s.barCount)) + '" ';
         str += 'x="' + (s.xunit / 2) + '" ';
         str += 'height="' + (barWidth / s.barCount) + '" ';
-        str += 'width="' + (props.x - s.xunit/2) + '"';
+        str += 'width="' + (props.x - s.xunit / 2) + '"';
     }
     str += 'fill="' + props.color + '" ';
     str += 'filter="url(#f1)"';
@@ -578,7 +568,7 @@ function RPathes(props) {
         if (props.data[i].type !== "line") { continue; }
         str += RPath({
             dataIndex: i,
-            state:props
+            state: props
         });
     }
     return str;
@@ -591,8 +581,8 @@ function RPath(props) {
     str += '<path ';
     str += 'class="r-c-path" ';
     str += 'data-data-index="' + props.dataIndex + '" ';
-    str += 'd="' + getD(data.stream,s) + '" ';
-    str += 'fill="' + data.style.color + '" ';
+    str += 'd="' + getD(data.stream, s) + '" ';
+    str += 'fill="' + data.color + '" ';
     str += 'style="opacity:0.15;"';
     str += '/>';
     return str;
@@ -604,15 +594,14 @@ function RPoints(props) {
     for (var i = 0; i < dataLength; i++) {
         var data = datas[i], streams = data.stream, streamLength = streams.length;
         if (data.type !== "line") { continue; }
-        var style = data.style;
         for (var j = 0; j < streamLength; j++) {
             var stream = streams[j];
             str += RPoint({
                 dataIndex: i, streamIndex: j,
                 x: stream.position.x, y: stream.position.y,
-                pointWidth: style.pointWidth,
-                lineWidth: style.lineWidth,
-                color: style.color,
+                pointWidth: data.pointSize,
+                lineWidth: data.lineSize,
+                color: data.color,
             });
         }
     }
@@ -640,7 +629,6 @@ function RLines(props) {
     for (var i = 0; i < dataLength; i++) {
         var data = datas[i], streams = data.stream, streamLength = streams.length;
         if (data.type !== "line") { continue; }
-        var style = data.style;
         for (var j = 0; j < streamLength; j++) {
             var stream = streams[j], after = streams[j + 1];
             if (!after) { continue; }
@@ -656,8 +644,8 @@ function RLines(props) {
                     index: j + 1
                 },
                 dataIndex: i,
-                lineWidth: style.lineWidth,
-                color: style.color,
+                lineWidth: data.lineSize,
+                color: data.color,
             });
         }
     }
@@ -720,7 +708,7 @@ function RShadow() {
     return str;
 }
 
-function RBackground(props){
+function RBackground(props) {
     var str = '';
     str += '<rect ';
     str += 'x="0" ';
@@ -751,6 +739,26 @@ function SelectRectangle() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function rChart(config) {
     var a = {
         ///////////////////variables///////////////////////////////
@@ -759,7 +767,7 @@ function rChart(config) {
         data: [],
         selected: [],
         filter: { x: [], y: [] },
-        
+
         layout: {},
         container: null,
         svg: null,
@@ -769,7 +777,7 @@ function rChart(config) {
         multiSelect: false,
         startOffset: null,
         onchange: null,
-        
+
         /////////////////////updates/////////////////////////
         update: function () {
             this.analyzeData();
@@ -796,7 +804,7 @@ function rChart(config) {
             this.eventHandler(".filter-clear", "mousedown", this.clearFilter);
             this.container.find(".x-axis")[0].addEventListener("wheel", $.proxy(this.labelWheel, this));
             this.container.find(".y-axis")[0].addEventListener("wheel", $.proxy(this.labelWheel, this));
-            
+
             if (this.label.x.type === "number") {
                 this.eventHandler(".x-label-item div", "click", this.labelClick);
                 this.eventHandler(".x-axis", "mousedown", this.labelMouseDown);
@@ -861,13 +869,13 @@ function rChart(config) {
                 this.movePointTo(obj);
             }
         },
-        
-        
-       
+
+
+
         /////////////////////events//////////////////////////
 
 
-        
+
         labelClick: function (e) {
             var element = $(e.target);
             this.showLabelPopup(element);
@@ -1001,9 +1009,9 @@ function rChart(config) {
             }
             this.update();
         },
-        
+
         /////////////////////select//////////////////////////
-        
+
 
 
 
@@ -1121,7 +1129,7 @@ function rChart(config) {
             textbox.val(value);
         },
 
-        
+
         Filter: function () {
             if (this.filter.x.length === 0 && this.filter.y.length === 0) { return ""; }
             var style = this.style;
@@ -1170,7 +1178,7 @@ function rChart(config) {
 
 
 
-        
+
 
     }
     a.init(config);
