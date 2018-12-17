@@ -2,20 +2,16 @@
     var a = {
         state: { showPoint: true, showLine: true, showXGrid: false, showYGrid: true, showArea: true, changable: false },
         selected: [],
+        isDown:false,
         selectRectangle: { x1: null, y1: null, x2: null, y2: null, template: null, element: null, active: false },
         update: function (obj) {
             for (var prop in obj) { this.state[prop] = obj[prop]; }
-            this.updateContainer();
             this.updateData();
             this.updateAxis("x"); this.updateAxis("y");
             this.updatePosition();
             this.render();
             this.eventHandler("window", "keydown", this.keyDown);
             this.eventHandler("window", "keyup", this.keyUp);
-        },
-        updateContainer: function () {
-            var container = $(this.state.container);
-            if (!container || container.length === 0) { alert("container error !!!"); }
         },
         updateData: function () {
             var s = this.state;
@@ -55,8 +51,8 @@
                 s[axis + 'start'] = s[axis].labels.start = s[axis].labels.start === undefined ? s[axis + 'min'] : s[axis].labels.start;
                 s[axis + 'end'] = s[axis].labels.end = s[axis].labels.end === undefined ? s[axis + 'max'] : s[axis].labels.end;
                 s[axis + 'step'] = s[axis].labels.step = s[axis].labels.step || Math.ceil((s[axis].labels.end - s[axis].labels.start) / 10);
-                s[axis + 'startvalue'] = s[axis + 'start'] - (s[axis + 'step'] / 2);
-                s[axis + 'endvalue'] = s[axis + 'end'] + (s[axis + 'step'] / 2);
+                s[axis + 'startvalue'] = s[axis + 'start'] - (axis==="x"?(s[axis + 'step'] / 2):0);
+                s[axis + 'endvalue'] = s[axis + 'end'] + (axis === "x" ? (s[axis + 'step'] / 2) : s[axis + 'step']);
                 s[axis + 'ratio'] = s[axis + 'svg'] / (s[axis + 'endvalue'] - s[axis + 'startvalue']);
             }
             s[axis + 'labels'] = s[axis].labels;
@@ -64,17 +60,10 @@
             s[axis + 'length'] = s[axis + 'list'].length;
             s[axis + 'unit'] = s[axis + 'svg'] / s[axis + 'length'];
         },
-        getStyle: function () {
-            var str = '';
-            str += 'position:absolute;left:0;top:0;width:100%;height:100%;';
-            return str;
-        },
         render: function () {
             var str = '', s = this.state;
-            str += '<div class="r-chart" style="' + this.getStyle() + '">';
-            str += AxisX(s);
-            str += AxisY(s);
-            str += RSVG(s);
+            str += '<div class="r-chart" style="position:absolute;left:0;top:0;width:100%;height:100%;">';
+            str += AxisX(s) + AxisY(s) + RSVG(s);
             str += '</div>';
             $(this.state.container).html(str);
             if (s.changable === true) {
@@ -83,7 +72,6 @@
             }
             this.eventHandler(".r-c-point", "mouseover", this.pointMouseOver);
             this.eventHandler(".r-c-point", "mouseleave", this.pointMouseOut);
-
         },
         updatePosition: function () {
             var datas = this.state.data, dataLength = datas.length;
@@ -255,21 +243,29 @@
             return { x: e.clientX - offset.left + pageXOffset, y: e.clientY - offset.top + pageYOffset };
         },
         pointMouseOver: function (e) {
-            var point = $(e.currentTarget);
-            var dataIndex = point.attr("data-data-index");
-            var streamIndex = point.attr("data-stream-index");
-            var data = this.state.data[dataIndex];
-            var stream = data.stream[streamIndex];
+            if (this.isDown) { return;}
+            this.addPointDetail($(e.currentTarget));
+        },
+        addPointDetail: function (point) {
+            $(this.state.container).find(".r-chart-detail").remove();
+            var data = this.state.data[point.attr("data-data-index")];
+            var stream = data.stream[point.attr("data-stream-index")];
             var position = stream.position;
             var offset = data.pointSize / 2;
-            var str = '<div style="height:10px;width:40px;font-size:10px;text-align:center;position:absolute;left:' + (parseInt(point.attr("cx")) + this.state.ysize - 20) + 'px;top:' + (parseInt(point.attr("cy")) - offset - 14) + 'px;" class="r-chart-detail">' + (stream.x + ',' + stream.y) + '</div>';
-            $(this.state.container).append(str);
-            
+            $(this.state.container).append(RPointDetail({
+                cx: parseInt(point.attr("cx")), cy: parseInt(point.attr("cy")),
+                xsize: this.state.xsize, ysize: this.state.ysize,
+                pointSize: data.pointSize,
+                x: stream.x, y: stream.y
+            }));
         },
+
         pointMouseOut: function () {
+            if (this.isDown) { return;}
             $(this.state.container).find(".r-chart-detail").remove();
         },
         pointMouseDown: function (e) {
+            this.isDown = $(e.currentTarget);
             var s = this.state;
             if (s.ytype === "number") { var axis = "y"; } else if (s.xtype === "number") { var axis = "x"; } else { return; }
             var element = $(e.target);
@@ -288,6 +284,7 @@
             this.startOffset = { coord: coords[axis], axis: axis, run: false, values: values };
         },
         pointMouseMove: function (e) {
+
             var s = this.state, so = this.startOffset, axis = so.axis, ratio = s[axis + "ratio"];
             var coords = this.getCoords(e);
             var offset = coords[axis] - so.coord;
@@ -304,8 +301,10 @@
                 this.moveTo(changeObj.dataIndex, changeObj.streamIndex, changeObj.value);
             }
             this.change = change;
+            this.addPointDetail(this.isDown);
         },
         pointMouseUp: function () {
+            this.isDown = false;
             this.eventRemover("window", "mousemove", this.pointMouseMove);
             this.eventRemover("window", "mouseup", this.pointMouseUp);
             if (this.onchange && this.change) { this.onchange(this.change); }
@@ -734,6 +733,16 @@ function SelectRectangle() {
     str += 'style="opacity:0.5" ';
     str += '/>'
     return str;
+}
+
+function RPointDetail(props) {
+    function getStyle() {
+        var str = 'height:10px;width:40px;font-size:10px;text-align:center;position:absolute;';
+        str+= 'left:' + (props.cx + props.ysize - 20) + 'px;';
+        str += 'top:' + (props.cy - (props.pointSize / 2) - 14) + 'px;';
+        return str;
+    }
+    return '<div style="' + getStyle() + '" class="r-chart-detail">' + (props.x + ',' + props.y) + '</div>';
 }
 
 
