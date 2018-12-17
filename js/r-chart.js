@@ -305,6 +305,7 @@
         },
         pointMouseUp: function () {
             this.isDown = false;
+            $(this.state.container).find(".r-chart-detail").remove();
             this.eventRemover("window", "mousemove", this.pointMouseMove);
             this.eventRemover("window", "mouseup", this.pointMouseUp);
             if (this.onchange && this.change) { this.onchange(this.change); }
